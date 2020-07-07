@@ -13,6 +13,13 @@ object List { // `List` companion object. Contains functions for creating and wo
     case Cons(x,xs) => x + sum(xs) // The sum of a list starting with `x` is `x` plus the sum of the rest of the list.
   }
 
+  def main(args: Array[String]): Unit = {
+    val myTail = tail(Cons(1, Cons(2,Cons(3,Cons(4,Nil)))))
+    println("tail: " + myTail)
+    val newList = setHead(List(1,2,3,4), 5)
+    println("newlist: " + newList)
+  }
+
   def product(ds: List[Double]): Double = ds match {
     case Nil => 1.0
     case Cons(0.0, _) => 0.0
@@ -50,9 +57,15 @@ object List { // `List` companion object. Contains functions for creating and wo
     foldRight(ns, 1.0)(_ * _) // `_ * _` is more concise notation for `(x,y) => x * y`; see sidebar
 
 
-  def tail[A](l: List[A]): List[A] = ???
+  def tail[A](l: List[A]): List[A] = l match {
+    case Nil => sys.error("tail of empty list")
+    case Cons(_ , t) => t
+  }
 
-  def setHead[A](l: List[A], h: A): List[A] = ???
+  def setHead[A](l: List[A], h: A): List[A] = l match {
+    case Nil => sys.error("set head of empty list")
+    case Cons(_, t) => Cons(h, t)
+  }
 
   def drop[A](l: List[A], n: Int): List[A] = ???
 

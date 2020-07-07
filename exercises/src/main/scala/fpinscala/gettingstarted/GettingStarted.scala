@@ -13,8 +13,18 @@ object MyModule {
     msg.format(x, abs(x))
   }
 
-  def main(args: Array[String]): Unit =
-    println(formatAbs(-42))
+  def partial1[A, B, C](a: A,f: (A,B) => C): B => C =
+    (b: B) => f(a, b)
+
+  def curry[A, B, C](f: (A, B) => C): A => (B => C) =
+    a => b => f(a, b)
+
+  def uncurry[A, B, C](f: A => B => C): (A, B) => C =
+    (a, b) => f(a)(b)
+
+  def compose[A, B, C](f: B => C, g: A => B): A => C =
+    a => f(g(a))
+
 
   // A definition of factorial, using a local, tail recursive function
   def factorial(n: Int): Int = {
@@ -35,8 +45,18 @@ object MyModule {
   }
 
   // Exercise 1: Write a function to compute the nth fibonacci number
-
-  def fib(n: Int): Int = ???
+  def fib(n: Int): Int = {
+    def go(i: Int, first: Int, second: Int): Int = {
+      if (i > n) {
+        first + second
+      } else {
+        go(i + 1, second, first + second)
+      }
+    }
+    if (n == 0) 0
+    else
+      go(3, 0, 1)
+  }
 
   // This definition and `formatAbs` are very similar..
   private def formatFactorial(n: Int) = {
@@ -140,7 +160,15 @@ object PolymorphicFunctions {
 
   // Exercise 2: Implement a polymorphic function to check whether
   // an `Array[A]` is sorted
-  def isSorted[A](as: Array[A], gt: (A,A) => Boolean): Boolean = ???
+  def isSorted[A](as: Array[A], gt: (A,A) => Boolean): Boolean = {
+    def go(as: Array[A]): Boolean = {
+      if (as.isEmpty) true
+      else if (as.tail.isEmpty) true
+      else if (gt(as.head, as.tail.head)) go(as.tail)
+      else false
+    }
+    go(as)
+  }
 
   // Polymorphic functions are often so constrained by their type
   // that they only have one implementation! Here's an example:
