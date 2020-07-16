@@ -52,6 +52,88 @@ object List { // `List` companion object. Contains functions for creating and wo
 
     val myConcat = concat(List(List(1,2,3), List(4,5,6)))
     println("myConcat: " + myConcat)
+
+    val onlyEven = filter(List(1,2,3,4,5))(x => x % 2 == 0)
+    println("onlEven: " + onlyEven)
+
+    val fm = flatMap(List(1,2,3))(x => List(x))
+    println("flatmap: " + fm)
+
+
+    val rAdd2 = addTwoLists(List(1,2,3), List(4,5,6))
+    println("addTwoLists: " + rAdd2)
+
+    val zw = zipWith(List("a", "b", "c"), List("x", "y", "x"))((first: String, second: String) => first + second)
+    println("zw: " + zw)
+
+    val hasSubs = hasSubsequences(List(1,2,3,4), List(1,2))
+    println("hasSubs: " + hasSubs)
+  }
+
+  def hasSubsequences[A](sup: List[A], sub: List[A]): Boolean = sup match {
+    case Nil => false
+    case Cons(_, Nil) => false
+    case Cons(first, Cons(second, _)) => sub match {
+      case Cons(sub1First, Cons(sub2First, _)) if (sub1First == first && sub2First == second) => true
+      case Cons(_, t) => hasSubsequences(t, sub)
+    }
+  }
+
+  def addTwoLists(l1: List[Int], l2: List[Int]): List[Int] = (l1, l2) match {
+    case (_, Nil) => Nil
+    case (Nil, _) => Nil
+    case (Cons(h1, t1), Cons(h2, t2)) => Cons(h1 + h2, addTwoLists(t1, t2))
+
+  }
+
+
+  /*
+  This function is usually called `zipWith`. The discussion about stack usage from the explanation of `map` also
+  applies here. By putting the `f` in the second argument list, Scala can infer its type from the previous argument list.
+  */
+  def zipWith[A,B,C](a: List[A], b: List[B])(f: (A,B) => C): List[C] = (a,b) match {
+    case (Nil, _) => Nil
+    case (_, Nil) => Nil
+    case (Cons(h1,t1), Cons(h2,t2)) => Cons(f(h1,h2), zipWith(t1,t2)(f))
+  }
+
+
+  def filterWithMap[A](l: List[A])(f: A => Boolean): List[A] =
+    flatMap(l)(a => if(f(a)) List(a) else Nil)
+
+
+//  def filterViaFlatMap[A](l: List[A])(f: A => Boolean): List[A] =
+//    flatMap(l)(a => if (f(a)) List(a) else Nil)
+
+  def concat[A](listOfLists: List[List[A]]): List[A] = {
+    foldLeft(listOfLists, Nil: List[A])((a: List[A], b: List[A]) => appendViaFoldLeft(a, b))
+  }
+
+  def filter[A](l: List[A])(f: A => Boolean): List[A] =
+    foldRight(l, Nil:List[A])((h,t) => if (f(h)) Cons(h,t) else t)
+
+  /*
+  This could also be implemented directly using `foldRight`.
+  */
+  def flatMap[A,B](l: List[A])(f: A => List[B]): List[B] =
+    concat(map(l)(f))
+
+
+  def foldRight[A,B](as: List[A], z: B)(f: (A, B) => B): B = // Utility functions
+    as match {
+      case Nil => z
+      case Cons(x, xs) => f(x, foldRight(xs, z)(f))
+    }
+
+  /*
+It's common practice to annotate functions you expect to be tail-recursive with the `tailrec` annotation. If the
+function is not tail-recursive, it will yield a compile error, rather than silently compiling the code and resulting
+in greater stack space usage at runtime.
+*/
+  @annotation.tailrec
+  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = l match {
+    case Nil => z
+    case Cons(h,t) => foldLeft(t, f(z,h))(f)
   }
 
 
@@ -73,16 +155,6 @@ object List { // `List` companion object. Contains functions for creating and wo
     case _ => 101
   }
 
-  /*
-It's common practice to annotate functions you expect to be tail-recursive with the `tailrec` annotation. If the
-function is not tail-recursive, it will yield a compile error, rather than silently compiling the code and resulting
-in greater stack space usage at runtime.
-*/
-  @annotation.tailrec
-  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = l match {
-    case Nil => z
-    case Cons(h,t) => foldLeft(t, f(z,h))(f)
-  }
 
 
   def appendViaFoldLeft[A, B](l: List[A], r: List[A]): List[A] = {
@@ -96,10 +168,6 @@ in greater stack space usage at runtime.
   def appendViaFoldRight[A](l: List[A], r: List[A]): List[A] =
     foldRight(l, r)(Cons(_,_))
 
-  def concat[A](listOfLists: List[List[A]]): List[A] = {
-    foldLeft(listOfLists, Nil: List[A])((a: List[A], b: List[A]) => appendViaFoldLeft(a, b))
-  }
-
 
   def append[A](a1: List[A], a2: List[A]): List[A] =
     a1 match {
@@ -107,11 +175,6 @@ in greater stack space usage at runtime.
       case Cons(h,t) => Cons(h, append(t, a2))
     }
 
-  def foldRight[A,B](as: List[A], z: B)(f: (A, B) => B): B = // Utility functions
-    as match {
-      case Nil => z
-      case Cons(x, xs) => f(x, foldRight(xs, z)(f))
-    }
 
 
 
@@ -199,6 +262,12 @@ in greater stack space usage at runtime.
   def reverse[A](l: List[A]): List[A] = foldLeft(l, List[A]())((acc,h) => Cons(h,acc))
 
 
-
-  def map[A,B](l: List[A])(f: A => B): List[B] = ???
+  /*
+  A natural solution is using `foldRight`, but our implementation of `foldRight` is not stack-safe. We can
+  use `foldRightViaFoldLeft` to avoid the stack overflow (variation 1), but more commonly, with our current
+  implementation of `List`, `map` will just be implemented using local mutation (variation 2). Again, note that the
+  mutation isn't observable outside the function, since we're only mutating a buffer that we've allocated.
+  */
+  def map[A,B](l: List[A])(f: A => B): List[B] =
+    foldRight(l, Nil:List[B])((h,t) => Cons(f(h),t))
 }
