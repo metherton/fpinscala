@@ -1,5 +1,7 @@
 package fpinscala.gettingstarted
 
+import fpinscala.gettingstarted.MyModule.{abs, factorial, formatResult}
+
 // A comment!
 /* Another comment */
 /** A documentation comment */
@@ -36,7 +38,13 @@ object MyModule {
 
   // Exercise 1: Write a function to compute the nth fibonacci number
 
-  def fib(n: Int): Int = ???
+  def fib(n: Int): Int = {
+    @annotation.tailrec
+    def go(i: Int, prev: Int, acc: Int): Int =
+      if (i == 0) prev
+      else go(i - 1, acc, acc + prev)
+    go(n, 0, 1)
+  }
 
   // This definition and `formatAbs` are very similar..
   private def formatFactorial(n: Int) = {
@@ -120,6 +128,23 @@ object MonomorphicBinarySearch {
 
 object PolymorphicFunctions {
 
+  def findFirst[A](as: Array[A], p: A => Boolean): Int = {
+    @annotation.tailrec
+    def loop(n: Int): Int = {
+      if (n >= as.length) -1
+      else if (p(as(n))) n
+      else loop(n + 1)
+    }
+    loop(0)
+  }
+
+  def main(args: Array[String]): Unit = {
+    val intArray = Array(21,2, 4, 6, 8, 10, 19, 115)
+    val firstDividedBy3 = findFirst(intArray, (i: Int) => i % 3 == 0)
+    println(s"First divided by 3 is $firstDividedBy3")
+    println(s"Is intArraySorted: ${isSorted(intArray, (a: Int, b: Int) => if (a > b) true else false)}")
+  }
+
   // Here's a polymorphic version of `binarySearch`, parameterized on
   // a function for testing whether an `A` is greater than another `A`.
   def binarySearch[A](as: Array[A], key: A, gt: (A,A) => Boolean): Int = {
@@ -140,7 +165,14 @@ object PolymorphicFunctions {
 
   // Exercise 2: Implement a polymorphic function to check whether
   // an `Array[A]` is sorted
-  def isSorted[A](as: Array[A], gt: (A,A) => Boolean): Boolean = ???
+  def isSorted[A](as: Array[A], gt: (A,A) => Boolean): Boolean = {
+    @annotation.tailrec
+    def loop(i: Int): Boolean =
+      if (i >= as.length - 1) true
+      else if (gt(as(i), as(i + 1))) false
+      else loop(i + 1)
+    loop(0)
+  }
 
   // Polymorphic functions are often so constrained by their type
   // that they only have one implementation! Here's an example:
