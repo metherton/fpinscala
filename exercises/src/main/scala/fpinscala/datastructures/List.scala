@@ -19,6 +19,12 @@ object List { // `List` companion object. Contains functions for creating and wo
     case Cons(x,xs) => x * product(xs)
   }
 
+  def addOne(l: List[Int]): List[Int] =
+    foldLeft(l, List())((b, a) => Cons(a + 1, b))
+
+  def doubleToString(l: List[Double]): List[String] =
+    foldLeft(l, List())((b, a) => Cons(a.toString, b))
+
   def apply[A](as: A*): List[A] = // Variadic function syntax
     if (as.isEmpty) Nil
     else Cons(as.head, apply(as.tail: _*))
@@ -36,6 +42,15 @@ object List { // `List` companion object. Contains functions for creating and wo
       case Nil => a2
       case Cons(h,t) => Cons(h, append(t, a2))
     }
+
+  def concat[A](lists: List[List[A]]): List[A] = {
+    foldLeft(lists, List())((b, a) => append(b, a))
+  }
+
+
+
+  def appendViaFoldRight[A](a1: List[A], a2: List[A]): List[A] =
+    foldRight(a1, a2)((a, b) => Cons(a, b))
 
   def foldRight[A,B](as: List[A], z: B)(f: (A, B) => B): B = // Utility functions
     as match {
@@ -91,17 +106,37 @@ object List { // `List` companion object. Contains functions for creating and wo
   def reverse[A](l: List[A]): List[A] =
     foldLeft(l, List[A]())((acc, h) => Cons(h, acc))
 
+  def appendViaFoldLeft[A](a1: List[A], a2: List[A]): List[A] =
+    foldLeft(a1, a2)((b, a) => Cons(a, b))
+
   @annotation.tailrec
   def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = l match {
     case Nil => z
     case Cons(h, t) => foldLeft(t, f(z, h))(f)
   }
 
+  def foldLeftViaFoldRight[A,B](l: List[A], z: B)(f: (B, A) => B): B =
+    foldRight(l, (b: B) => b)((a, g) => b => g(f(b, a)))(z)
 
-  def map[A,B](l: List[A])(f: A => B): List[B] = ???
 
+  def map[A,B](l: List[A])(f: A => B): List[B] =
+    foldLeft(l, Nil:List[B])((acc, x) => Cons(f(x), acc))
 
+  def filter[A](l: List[A])(f: A => Boolean): List[A] =
+    foldLeft(l, List[A]())((b, a) => if (f(a)) Cons(a, b) else b)
 
+  def filterViaFlatMap[A](l: List[A])(f: A => Boolean): List[A] =
+    flatMap(l)(h => if (f(h)) Cons(h, Nil) else Nil)
+
+  def zipWith[A, B, C](l1: List[A], l2: List[B])(f : (A, B) => C): List[C] = (l1, l2) match {
+    case (Nil, _) => Nil
+    case (_, Nil) => Nil
+    case (Cons(h1, t1), Cons(h2, t2)) => Cons(f(h1, h2), zipWith(t1, t2)(f))
+
+  }
+
+  def flatMap[A, B](as: List[A])(f: A => List[B]): List[B] =
+    concat(map(as)(a => f(a)))
 
   def test_append(): Unit =
   {
