@@ -20,10 +20,10 @@ object List { // `List` companion object. Contains functions for creating and wo
   }
 
   def addOne(l: List[Int]): List[Int] =
-    foldLeft(l, List())((b, a) => Cons(a + 1, b))
+    foldLeft(l, List[Int]())((b, a) => Cons(a + 1, b))
 
   def doubleToString(l: List[Double]): List[String] =
-    foldLeft(l, List())((b, a) => Cons(a.toString, b))
+    foldLeft(l, List[String]())((b, a) => Cons(a.toString, b))
 
   def apply[A](as: A*): List[A] = // Variadic function syntax
     if (as.isEmpty) Nil
@@ -44,7 +44,7 @@ object List { // `List` companion object. Contains functions for creating and wo
     }
 
   def concat[A](lists: List[List[A]]): List[A] = {
-    foldLeft(lists, List())((b, a) => append(b, a))
+    foldLeft(lists, List[A]())((b, a) => append(b, a))
   }
 
 
@@ -137,6 +137,19 @@ object List { // `List` companion object. Contains functions for creating and wo
 
   def flatMap[A, B](as: List[A])(f: A => List[B]): List[B] =
     concat(map(as)(a => f(a)))
+
+
+  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = sup match {
+    case Nil => sub == Nil
+    case _ if startsWith(sup, sub) => true
+    case Cons(h, t) => hasSubsequence(t, sub)
+  }
+
+  def startsWith[A](l: List[A], prefix: List[A]): Boolean = (l, prefix) match {
+    case (_,Nil) => true
+    case (Cons(h, t), Cons(h2, t2)) if h == h2  => startsWith(t, t2)
+    case _ => false
+  }
 
   def test_append(): Unit =
   {
